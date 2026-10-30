@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Calculatrice · Pastel</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧮</text></svg>" />
+<style>
+  :root{
+    --ink:#4b4560;
+    --ink-soft:#8f88a6;
+    --ink-faint:#b3adc4;
+    --stroke:rgba(120,110,160,.14);
+    --stroke-soft:rgba(120,110,160,.09);
+    --lov:#b9a9f2;
+    --pink:#ffb3c8;
+    --mint:#a6e3cd;
+    --peach:#ffd2b3;
+    --sky:#aed7f7;
+    --shadow:0 18px 44px -20px rgba(96,84,146,.42), 0 2px 8px rgba(96,84,146,.05);
+  }
+
+  *{box-sizing:border-box;}
+
+  html,body{height:100%;}
+
+  body{
+    margin:0;
+    padding:26px 18px 34px;
+    font-family:"Segoe UI Variable Text","Segoe UI",-apple-system,BlinkMacSystemFont,"Inter",system-ui,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(900px 620px at 8% -5%, #ffe4ee 0%, rgba(255,228,238,0) 62%),
+      radial-gradient(880px 700px at 102% 4%, #e4ebff 0%, rgba(228,235,255,0) 58%),
+      radial-gradient(820px 640px at 48% 108%, #ddf8ec 0%, rgba(221,248,236,0) 60%),
+      #fbf9fe;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .app{
+    display:grid;
+    grid-template-columns:minmax(0,1.22fr) minmax(0,.88fr);
+    gap:22px;
+    width:100%;
+    max-width:1020px;
+  }
+
+  .glass{
+    background:rgba(255,255,255,.72);
+    -webkit-backdrop-filter:blur(18px);
+    backdrop-filter:blur(18px);
+    border:1px solid var(--stroke);
+    border-radius:28px;
+    box-shadow:var(--shadow);
+  }
+
+  /* ---------------- Calculatrice ---------------- */
+  .calc{padding:20px 20px 22px;}
+
+  .calc-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:2px 4px 14px;
+  }
+
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:700;
+    letter-spacing:.2px;
+    font-size:.98rem;
+  }
+
+  .brand .dot{
+    width:30px;height:30px;
+    border-radius:11px;
+    background:linear-gradient(135deg,var(--lov),var(--pink));
+    display:grid;place-items:center;
+    font-size:.9rem;
+    box-shadow:0 6px 14px -8px rgba(150,120,220,.9);
+  }
+
+  .seg{
+    display:flex;
+    gap:4px;
+    padding:4px;
+    border-radius:14px;
+    background:rgba(185,169,242,.13);
+  }
+  .seg-btn{
+    border:none;
+    background:transparent;
+    padding:7px 13px;
+    border-radius:10px;
+    font:inherit;
+    font-size:.72rem;
+    font-weight:700;
+    letter-spacing:.7px;
+    color:var(--ink-soft);
+    cursor:pointer;
+    transition:.18s ease;
+  }
+  .seg-btn.active{
+    background:#fff;
+    color:#6b5bd2;
+    box-shadow:0 4px 12px -8px rgba(96,84,146,.9);
+  }
+
+  .screen{
+    position:relative;
+    border-radius:22px;
+    padding:16px 18px 14px;
+    margin-bottom:16px;
+    background:linear-gradient(160deg, rgba(255,255,255,.95), rgba(249,246,255,.9));
+    border:1px solid var(--stroke-soft);
+    box-shadow:inset 0 2px 10px rgba(120,110,160,.06);
+    min-height:128px;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    gap:8px;
+    cursor:copy;
+    overflow:hidden;
+  }
+  .screen::after{
+    content:"";
+    position:absolute;
+    inset:auto -40% -70% -40%;
+    height:120px;
+    background:radial-gradient(closest-side, rgba(185,169,242,.22), transparent);
+    pointer-events:none;
+  }
+
+  .screen-sub{
+    font-size:.92rem;
+    min-height:1.2em;
+    text-align:right;
+    color:var(--ink-faint);
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    transition:color .2s;
+  }
+  .screen-sub.err{color:#e2688a;font-weight:600;}
+
+  .screen-main{
+    font-size:2.9rem;
+    font-weight:650;
+    line-height:1.1;
+    text-align:right;
+    letter-spacing:-.5px;
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    color:var(--ink);
+    transition:color .2s, font-size .12s;
+  }
+  .screen-main.result{color:#6b5bd2;}
+
+  .keys{
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:9px;
+  }
+
+  .key{
+    appearance:none;
+    border:1px solid rgba(255,255,255,.75);
+    border-radius:17px;
+    height:52px;
+    padding:0;
+    font:inherit;
+    font-size:1.02rem;
+    font-weight:600;
+    color:var(--ink);
+    background:#fff;
+    cursor:pointer;
+    box-shadow:0 6px 14px -12px rgba(96,84,146,.9), inset 0 -1px 0 rgba(120,110,160,.06);
+    transition:transform .09s ease, box-shadow .18s ease, background .18s ease, color .18s ease;
+    display:grid;
+    place-items:center;
+    user-select:none;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .key:hover{transform:translateY(-1.5px); box-shadow:0 12px 20px -14px rgba(96,84,146,.95);}
+  .key:active{transform:translateY(1px) scale(.985); box-shadow:0 3px 8px -8px rgba(96,84,146,.9);}
+  .key:focus-visible{outline:2px solid var(--lov); outline-offset:2px;}
+
+  .key.fn{
+    font-size:.86rem;
+    font-weight:700;
+    color:#7d6bb8;
+    background:linear-gradient(180deg,#f7f3ff,#efe9ff);
+  }
+  .key.util{
+    font-size:.9rem;
+    font-weight:700;
+    color:#c4638a;
+    background:linear-gradient(180deg,#fff5f8,#ffe9f0);
+  }
+  .key.op{
+    color:#5f54a8;
+    font-size:1.2rem;
+    background:linear-gradient(180deg,#f2eeff,#e7e0ff);
+  }
+  .key.eq{
+    color:#fff;
+    font-size:1.35rem;
+    background:linear-gradient(160deg,#bda9f6,#f1a9c2);
+    border-color:rgba(255,255,255,.5);
+    box-shadow:0 12px 22px -14px rgba(160,120,220,1), inset 0 1px 0 rgba(255,255,255,.5);
+  }
+  .key.eq:hover{box-shadow:0 16px 26px -14px rgba(160,120,220,1), inset 0 1px 0 rgba(255,255,255,.5);}
+  .key.num{background:linear-gradient(180deg,#ffffff,#fbfaff);}
+  .key.span2{grid-column:span 2;}
+  .key.tall2{grid-row:span 2;height:auto;}
+
+  /* ---------------- Panneau droit ---------------- */
+  .panel{display:flex;flex-direction:column;min-height:560px;overflow:hidden;}
+
+  .tabs{
+    display:flex;
+    gap:6px;
+    padding:16px 16px 0;
+  }
+  .tab{
+    flex:1;
+    border:none;
+    background:transparent;
+    padding:11px 8px;
+    border-radius:14px;
+    font:inherit;
+    font-size:.84rem;
+    font-weight:650;
+    color:var(--ink-soft);
+    cursor:pointer;
+    transition:.2s ease;
+  }
+  .tab:hover{color:var(--ink);}
+  .tab.active{
+    background:#fff;
+    color:#6b5bd2;
+    box-shadow:0 8px 18px -14px rgba(96,84,146,1);
+  }
+
+  .tab-body{
+    flex:1;
+    min-height:0;
+    padding:14px 16px 18px;
+    display:flex;
+    flex-direction:column;
+  }
+  .view{display:none;flex:1;min-height:0;flex-direction:column;}
+  .view.active{display:flex;}
+
+  /* Historique */
+  .hist-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:2px 4px 10px;
+    font-size:.72rem;
+    font-weight:700;
+    letter-spacing:.9px;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+  }
+  .link-btn{
+    border:none;
+    background:transparent;
+    font:inherit;
+    font-size:.72rem;
+    font-weight:700;
+    letter-spacing:.5px;
+    color:#b06a8c;
+    cursor:pointer;
+    padding:4px 6px;
+    border-radius:8px;
+    transition:.18s;
+  }
+  .link-btn:hover{background:rgba(255,179,200,.18);}
+
+  .hist-list{
+    flex:1;
+    min-height:0;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    padding:2px 4px 4px 2px;
+    scrollbar-width:thin;
+    scrollbar-color:rgba(185,169,242,.5) transparent;
+  }
+  .hist-list::-webkit-scrollbar{width:6px;}
+  .hist-list::-webkit-scrollbar-thumb{background:rgba(185,169,242,.45);border-radius:99px;}
+
+  .hist-item{
+    border:1px solid var(--stroke-soft);
+    background:rgba(255,255,255,.75);
+    border-radius:15px;
+    padding:10px 13px;
+    text-align:right;
+    font:inherit;
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+    transition:.16s ease;
+    animation:pop .22s ease;
+  }
+  .hist-item:hover{background:#fff;transform:translateX(-2px);box-shadow:0 10px 20px -16px rgba(96,84,146,1);}
+  .hist-expr{
+    font-size:.78rem;
+    color:var(--ink-faint);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    font-variant-numeric:tabular-nums;
+  }
+  .hist-res{
+    font-size:1.06rem;
+    font-weight:650;
+    color:#6b5bd2;
+    font-variant-numeric:tabular-nums;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .empty{
+    margin:auto;
+    text-align:center;
+    color:var(--ink-faint);
+    font-size:.84rem;
+    line-height:1.7;
+    padding:24px 10px;
+  }
+  .empty strong{display:block;font-size:1.9rem;margin-bottom:8px;opacity:.55;}
+
+  /* Convertisseur */
+  .conv{display:flex;flex-direction:column;gap:14px;padding:2px;}
+
+  .field-label{
+    font-size:.7rem;
+    font-weight:700;
+    letter-spacing:.9px;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    margin-bottom:6px;
+    display:block;
+  }
+
+  .selectwrap{position:relative;}
+  select{
+    width:100%;
+    appearance:none;
+    -webkit-appearance:none;
+    font:inherit;
+    font-size:.85rem;
+    font-weight:600;
+    color:var(--ink);
+    background:#fff;
+    border:1px solid var(--stroke);
+    border-radius:13px;
+    padding:11px 32px 11px 12px;
+    cursor:pointer;
+    transition:.18s;
+  }
+  select:hover{border-color:rgba(185,169,242,.75);}
+  select:focus{outline:none;border-color:var(--lov);box-shadow:0 0 0 3px rgba(185,169,242,.22);}
+  .selectwrap::after{
+    content:"";
+    position:absolute;
+    right:13px;top:50%;
+    width:7px;height:7px;
+    border-right:2px solid var(--ink-faint);
+    border-bottom:2px solid var(--ink-faint);
+    transform:translateY(-70%) rotate(45deg);
+    pointer-events:none;
+  }
+
+  .conv-card{
+    background:rgba(255,255,255,.8);
+    border:1px solid var(--stroke-soft);
+    border-radius:18px;
+    padding:12px;
+  }
+
+  .conv-value{
+    width:100%;
+    font:inherit;
+    font-size:1.32rem;
+    font-weight:650;
+    color:var(--ink);
+    background:transparent;
+    border:none;
+    border-bottom:1px dashed rgba(185,169,242,.5);
+    padding:6px 2px 8px;
+    margin-bottom:10px;
+    font-variant-numeric:tabular-nums;
+    text-align:right;
+  }
+  .conv-value:focus{outline:none;border-bottom-color:var(--lov);}
+  .conv-value[readonly]{color:#6b5bd2;cursor:default;}
+
+  .swap-row{display:flex;justify-content:center;margin:-6px 0;}
+  .swap{
+    width:38px;height:38px;
+    border-radius:50%;
+    border:1px solid var(--stroke);
+    background:#fff;
+    color:#8a7cc4;
+    font-size:1rem;
+    cursor:pointer;
+    display:grid;place-items:center;
+    box-shadow:0 8px 16px -12px rgba(96,84,146,1);
+    transition:.2s ease;
+  }
+  .swap:hover{transform:rotate(180deg);color:#6b5bd2;}
+
+  /* Toast */
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom:26px;
+    transform:translate(-50%,18px);
+    background:rgba(75,69,96,.92);
+    color:#fff;
+    font-size:.82rem;
+    font-weight:600;
+    padding:10px 18px;
+    border-radius:99px;
+    opacity:0;
+    pointer-events:none;
+    transition:.24s ease;
+    z-index:50;
+    box-shadow:0 14px 30px -16px rgba(0,0,0,.7);
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0);}
+
+  @keyframes pop{
+    from{opacity:0;transform:translateY(-6px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+
+  @media (max-width:880px){
+    .app{grid-template-columns:1fr;}
+    .panel{min-height:440px;}
+  }
+
+  @media (max-width:520px){
+    body{padding:14px 10px 24px;}
+    .calc{padding:14px 14px 16px;border-radius:24px;}
+    .key{height:46px;font-size:.95rem;border-radius:14px;}
+    .key.fn{font-size:.78rem;}
+    .screen-main{font-size:2.3rem;}
+    .keys{gap:7px;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important;animation:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<main class="app">
+
+  <!-- ============ CALCULATRICE ============ -->
+  <section class="glass calc" aria-label="Calculatrice">
+    <header class="calc-head">
+      <div class="brand"><span class="dot">🧮</span> Calculatrice</div>
+      <div class="seg" role="group" aria-label="Mode d'angle">
+        <button class="seg-btn active" data-angle="deg" type="button">DEG</button>
+        <button class="seg-btn" data-angle="rad" type="button">RAD</button>
+      </div>
+    </header>
+
+    <div class="screen" id="screen" title="Cliquer pour copier le résultat">
+      <div class="screen-sub" id="sub"></div>
+      <div class="screen-main" id="main" aria-live="polite">0</div>
+    </div>
+
+    <div class="keys" id="keys">
+      <button class="key util" data-ins="clear" title="Tout effacer (Échap)">C</button>
+      <button class="key util" data-ins="back" title="Effacer (Retour arrière)">⌫</button>
+      <button class="key fn" data-ins="%" title="Pourcentage">%</button>
+      <button class="key fn" data-ins="(" title="Parenthèse ouvrante">(</button>
+      <button class="key fn" data-ins=")" title="Parenthèse fermante">)</button>
+
+      <button class="key fn" data-ins="sin(" title="Sinus">sin</button>
+      <button class="key fn" data-ins="cos(" title="Cosinus">cos</button>
+      <button class="key fn" data-ins="tan(" title="Tangente">tan</button>
+      <button class="key fn" data-ins="ln(" title="Logarithme népérien">ln</button>
+      <button class="key op" data-ins="/" title="Diviser">÷</button>
+
+      <button class="key fn" data-ins="log(" title="Logarithme décimal">log</button>
+      <button class="key fn" data-ins="sqrt(" title="Racine carrée">√</button>
+      <button class="key fn" data-ins="^2" title="Carré">x²</button>
+      <button class="key fn" data-ins="^" title="Puissance">xʸ</button>
+      <button class="key op" data-ins="*" title="Multiplier">×</button>
+
+      <button class="key num" data-ins="7">7</button>
+      <button class="key num" data-ins="8">8</button>
+      <button class="key num" data-ins="9">9</button>
+      <button class="key fn" data-ins="π" title="Pi">π</button>
+      <button class="key op" data-ins="-" title="Soustraire">−</button>
+
+      <button class="key num" data-ins="4">4</button>
+      <button class="key num" data-ins="5">5</button>
+      <button class="key num" data-ins="6">6</button>
+      <button class="key fn" data-ins="e" title="Nombre d'Euler">e</button>
+      <button class="key op" data-ins="+" title="Additionner">+</button>
+
+      <button class="key num" data-ins="1">1</button>
+      <button class="key num" data-ins="2">2</button>
+      <button class="key num" data-ins="3">3</button>
+      <button class="key fn" data-ins="!" title="Factorielle">n!</button>
+      <button class="key eq tall2" data-ins="equals" title="Résultat (Entrée)">=</button>
+
+      <button class="key num span2" data-ins="0">0</button>
+      <button class="key num" data-ins=".">,</button>
+      <button class="key fn" data-ins="ANS" title="Dernier résultat">Ans</button>
+    </div>
+  </section>
+
+  <!-- ============ PANNEAU ============ -->
+  <aside class="glass panel" aria-label="Historique et convertisseur">
+    <div class="tabs" role="tablist">
+      <button class="tab active" type="button" data-view="hist" role="tab" aria-selected="true">Historique</button>
+      <button class="tab" type="button" data-view="conv" role="tab" aria-selected="false">Convertisseur</button>
+    </div>
+
+    <div class="tab-body">
+
+      <!-- Historique -->
+      <div class="view active" id="view-hist">
+        <div class="hist-head">
+          <span>Calculs récents</span>
+          <button class="link-btn" type="button" id="clearHist">Effacer</button>
+        </div>
+        <div class="hist-list" id="histList"></div>
+      </div>
+
+      <!-- Convertisseur -->
+      <div class="view" id="view-conv">
+        <div class="conv">
+          <div>
+            <label class="field-label" for="cat">Catégorie</label>
+            <div class="selectwrap"><select id="cat"></select></div>
+          </div>
+
+          <div class="conv-card">
+            <span class="field-label">De</span>
+            <input class="conv-value" id="convIn" type="text" inputmode="decimal" value="1" aria-label="Valeur à convertir" />
+            <div class="selectwrap"><select id="convFrom"></select></div>
+          </div>
+
+          <div class="swap-row">
+            <button class="swap" id="swap" type="button" title="Inverser les unités">⇅</button>
+          </div>
+
+          <div class="conv-card">
+            <span class="field-label">Vers</span>
+            <input class="conv-value" id="convOut" type="text" readonly value="0" aria-label="Résultat de la conversion" />
+            <div class="selectwrap"><select id="convTo"></select></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  /* =========================================================
+     1. Utilitaires
+     ========================================================= */
+  class CalcError extends Error {}
+
+  const nf = (digits) => new Intl.NumberFormat('fr-FR', { maximumSignificantDigits: digits });
+
+  const num0 = (v, digits = 12) => {
+    if (Number.isNaN(v)) return 'Erreur';
+    if (!isFinite(v)) return v > 0 ? '∞' : '−∞';
+    const abs = Math.abs(v);
+    if (abs !== 0 && (abs >= 1e15 || abs < 1e-9)) {
+      return v.toExponential(6)
+        .replace(/\.?0+e/, 'e')
+        .replace('e+', 'e')
+        .replace('e-', 'e−')
+        .replace('.', ',');
+    }
+    let rounded = parseFloat(v.toPrecision(12));
+    if (Object.is(rounded, -0)) rounded = 0;
+    return nf(digits).format(rounded);
+  };
+
+  const snap = (v) => (Math.abs(v) < 1e-12 ? 0 : v);
+
+  /* =========================================================
+     2. Analyseur d'expressions (aucun eval)
+     ========================================================= */
+  const CONSTS = { pi: Math.PI, e: Math.E };
+
+  const makeFuncs = () => {
+    const toRad = (x) => (state.angle === 'deg' ? (x * Math.PI) / 180 : x);
+    const fromRad = (x) => (state.angle === 'deg' ? (x * 180) / Math.PI : x);
+
+    return {
+      sin: (x) => snap(Math.sin(toRad(x))),
+      cos: (x) => snap(Math.cos(toRad(x))),
+      tan: (x) => {
+        const r = toRad(x);
+        const c = Math.cos(r);
+        if (Math.abs(c) < 1e-12) throw new CalcError('Tangente indéfinie');
+        return snap(Math.sin(r) / c);
+      },
+      asin: (x) => fromRad(Math.asin(x)),
+      acos: (x) => fromRad(Math.acos(x)),
+      atan: (x) => fromRad(Math.atan(x)),
+      sqrt: (x) => {
+        if (x < 0) throw new CalcError('Racine d\'un nombre négatif');
+        return Math.sqrt(x);
+      },
+      ln: (x) => {
+        if (x <= 0) throw new CalcError('Logarithme : x > 0 requis');
+        return Math.log(x);
+      },
+      log: (x) => {
+        if (x <= 0) throw new CalcError('Logarithme : x > 0 requis');
+        return Math.log10(x);
+      },
+      abs: Math.abs,
+      exp: Math.exp,
+      floor: Math.floor,
+      ceil: Math.ceil,
+      round: Math.round,
+    };
+  };
+
+  let FUNCS = makeFuncs();
+
+  function factorial(n) {
+    if (n < 0 || !Number.isInteger(n)) throw new CalcError('Factorielle : entier ≥ 0 requis');
+    if (n > 170) return Infinity;
+    let r = 1;
+    for (let i = 2; i <= n; i++) r *= i;
+    return r;
+  }
+
+  function tokenize(raw) {
+    const src = raw
+      .replace(/,/g, '.')
+      .replace(/×/g, '*')
+      .replace(/÷/g, '/')
+      .replace(/−/g, '-')
+      .replace(/π/g, 'pi')
+      .replace(/√/g, 'sqrt')
+      .replace(/²/g, '^2');
+
+    const tokens = [];
+    let i = 0;
+
+    while (i < src.length) {
+      const ch = src[i];
+
+      if (/\s/.test(ch)) { i++; continue; }
+
+      if (/[0-9.]/.test(ch)) {
+        let str = '';
+        let dot = false;
+        while (i < src.length && /[0-9.]/.test(src[i])) {
+          if (src[i] === '.') {
+            if (dot) throw new CalcError('Nombre mal formé');
+            dot = true;
+          }
+          str += src[i++];
+        }
+        tokens.push({ type: 'num', value: parseFloat(str) });
+        continue;
+      }
+
+      if (/[a-zA-Z]/.test(ch)) {
+        let id = '';
+        while (i < src.length && /[a-zA-Z]/.test(src[i])) id += src[i++];
+        tokens.push({ type: 'id', value: id.toLowerCase() });
+        continue;
+      }
+
+      if ('+-*/^()!%'.includes(ch)) {
+        tokens.push({ type: 'op', value: ch });
+        i++;
+        continue;
+      }
+
+      throw new CalcError(`Caractère invalide : ${ch}`);
+    }
+
+    return tokens;
+  }
+
+  function evaluate(raw) {
+    const tokens = tokenize(raw);
+    if (!tokens.length) throw new CalcError('Expression vide');
+
+    let pos = 0;
+    let lastWasPct = false;
+    const peek = () => tokens[pos];
+    const next = () => { lastWasPct = false; return tokens[pos++]; };
+    const isOp = (v) => !!peek() && peek().type === 'op' && peek().value === v;
+
+    function parseExpr() {
+      let left = parseTerm();
+      while (peek() && peek().type === 'op' && (peek().value === '+' || peek().value === '-')) {
+        const op = next().value;
+        const right = parseTerm();
+        // « 200 + 10 % » vaut 220 : le pourcentage s'applique au terme de gauche
+        if (lastWasPct) {
+          left = op === '+' ? left + left * right : left - left * right;
+        } else {
+          left = op === '+' ? left + right : left - right;
+        }
+      }
+      return left;
+    }
+
+    function startsPrimary(t) {
+      if (!t) return false;
+      if (t.type === 'num') return true;
+      if (t.type === 'op') return t.value === '(';
+      if (t.type === 'id') return t.value === 'ans' || CONSTS[t.value] !== undefined || !!FUNCS[t.value];
+      return false;
+    }
+
+    function parseTerm() {
+      let left = parseUnary();
+      for (;;) {
+        const t = peek();
+        if (t && t.type === 'op' && (t.value === '*' || t.value === '/')) {
+          const op = next().value;
+          const right = parseUnary();
+          if (op === '/') {
+            if (right === 0) throw new CalcError('Division par zéro');
+            left /= right;
+          } else {
+            left *= right;
+          }
+        } else if (startsPrimary(t)) {
+          // multiplication implicite : 2π, 3(4+1), 2sin(30)
+          left *= parseUnary();
+        } else {
+          break;
+        }
+      }
+      return left;
+    }
+
+    function parseUnary() {
+      const t = peek();
+      if (t && t.type === 'op' && (t.value === '-' || t.value === '+')) {
+        next();
+        const v = parseUnary();
+        return t.value === '-' ? -v : v;
+      }
+      return parsePower();
+    }
+
+    function parsePower() {
+      const base = parsePostfix();
+      if (isOp('^')) {
+        next();
+        const exp = parseUnary();
+        return Math.pow(base, exp);
+      }
+      return base;
+    }
+
+    function parsePostfix() {
+      let v = parsePrimary();
+      for (;;) {
+        if (isOp('!')) { next(); v = factorial(v); }
+        else if (isOp('%')) { next(); lastWasPct = true; v = v / 100; }
+        else break;
+      }
+      return v;
+    }
+
+    function parsePrimary() {
+      const t = peek();
+      if (!t) throw new CalcError('Expression incomplète');
+
+      if (t.type === 'num') { next(); return t.value; }
+
+      if (t.type === 'op' && t.value === '(') {
+        next();
+        const v = parseExpr();
+        if (!isOp(')')) throw new CalcError('Parenthèse manquante');
+        next();
+        return v;
+      }
+
+      if (t.type === 'id') {
+        next();
+        if (t.value === 'ans') return state.lastAnswer;
+        if (CONSTS[t.value] !== undefined) return CONSTS[t.value];
+
+        if (FUNCS[t.value]) {
+          let arg;
+          if (isOp('(')) {
+            next();
+            arg = parseExpr();
+            if (!isOp(')')) throw new CalcError('Parenthèse manquante');
+            next();
+          } else {
+            arg = parseUnary();
+          }
+          return FUNCS[t.value](arg);
+        }
+        throw new CalcError(`Fonction inconnue : ${t.value}`);
+      }
+
+      throw new CalcError('Expression invalide');
+    }
+
+    const value = parseExpr();
+    if (pos < tokens.length) throw new CalcError('Expression invalide');
+    if (Number.isNaN(value)) throw new CalcError('Résultat indéfini');
+    return value;
+  }
+
+  /* =========================================================
+     3. État & affichage
+     ========================================================= */
+  const state = {
+    input: '',
+    lastExpr: '',
+    resultShown: null,
+    lastAnswer: 0,
+    angle: 'deg',
+    error: '',
+  };
+
+  const mainEl = document.getElementById('main');
+  const subEl = document.getElementById('sub');
+  const screenEl = document.getElementById('screen');
+
+  const pretty = (s) => s
+    .replace(/\*/g, '×')
+    .replace(/\//g, '÷')
+    .replace(/-/g, '−')
+    .replace(/sqrt\(/g, '√(')
+    .replace(/pi/g, 'π')
+    .replace(/ANS/g, 'Ans');
+
+  function setMain(text, isResult) {
+    mainEl.textContent = text;
+    mainEl.classList.toggle('result', !!isResult);
+    const n = text.length;
+    const size = n <= 11 ? 2.9 : n <= 15 ? 2.45 : n <= 19 ? 2.05 : n <= 26 ? 1.72 : 1.45;
+    mainEl.style.fontSize = size + 'rem';
+  }
+
+  function refresh() {
+    subEl.classList.toggle('err', !!state.error);
+
+    if (state.error) {
+      subEl.textContent = state.error;
+    } else if (state.resultShown !== null) {
+      subEl.textContent = pretty(state.lastExpr) + ' =';
+    } else if (state.input.trim()) {
+      try {
+        subEl.textContent = '= ' + num0(evaluate(state.input));
+      } catch {
+        subEl.textContent = '';
+      }
+    } else {
+      subEl.textContent = '';
+    }
+
+    if (state.resultShown !== null) {
+      setMain(num0(state.resultShown), true);
+    } else if (state.input) {
+      setMain(pretty(state.input), false);
+    } else {
+      setMain('0', false);
+    }
+  }
+
+  /* =========================================================
+     4. Saisie
+     ========================================================= */
+  const OPERATOR_START = /^[+\-*/^!%)]/;
+
+  function insert(str) {
+    if (state.resultShown !== null) {
+      state.input = OPERATOR_START.test(str) ? 'ANS' : '';
+      state.resultShown = null;
+    }
+    state.error = '';
+    state.input += str;
+    refresh();
+  }
+
+  function clearAll() {
+    state.input = '';
+    state.lastExpr = '';
+    state.resultShown = null;
+    state.error = '';
+    refresh();
+  }
+
+  function backspace() {
+    if (state.resultShown !== null) {
+      // On repart de l'expression qui a produit le résultat
+      state.resultShown = null;
+      state.error = '';
+      refresh();
+      return;
+    }
+    state.error = '';
+    state.input = state.input.slice(0, -1);
+    refresh();
+  }
+
+  function equals() {
+    if (!state.input.trim()) return;
+    try {
+      const value = evaluate(state.input);
+      state.resultShown = value;
+      state.lastExpr = state.input;
+      state.lastAnswer = value;
+      state.error = '';
+      addHistory(state.input, value);
+    } catch (err) {
+      state.error = err.message || 'Erreur';
+    }
+    refresh();
+  }
+
+  document.getElementById('keys').addEventListener('click', (e) => {
+    const btn = e.target.closest('.key');
+    if (!btn) return;
+    const key = btn.dataset.ins;
+
+    if (key === 'clear') return clearAll();
+    if (key === 'back') return backspace();
+    if (key === 'equals') return equals();
+    if (key === 'ANS') return insert('ANS');
+    insert(key);
+  });
+
+  /* Clavier */
+  document.addEventListener('keydown', (e) => {
+    if (e.target.closest('input, select, textarea')) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+    const k = e.key;
+
+    if (/^[0-9]$/.test(k)) { insert(k); e.preventDefault(); return; }
+    if (k === '.' || k === ',') { insert('.'); e.preventDefault(); return; }
+
+    const map = {
+      '+': '+', '-': '-', '*': '*', x: '*', '/': '/',
+      '^': '^', '(': '(', ')': ')', '%': '%', '!': '!',
+    };
+    if (map[k]) { insert(map[k]); e.preventDefault(); return; }
+
+    if (k === 'Enter' || k === '=') { equals(); e.preventDefault(); return; }
+    if (k === 'Backspace') { backspace(); e.preventDefault(); return; }
+    if (k === 'Escape' || k === 'Delete') { clearAll(); e.preventDefault(); return; }
+    if (k === 'p' || k === 'P') { insert('π'); e.preventDefault(); return; }
+  });
+
+  /* Mode d'angle */
+  document.querySelectorAll('.seg-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      state.angle = btn.dataset.angle;
+      document.querySelectorAll('.seg-btn').forEach((b) => b.classList.toggle('active', b === btn));
+      FUNCS = makeFuncs();
+      try { localStorage.setItem('calc.angle', state.angle); } catch {}
+      refresh();
+    });
+  });
+
+  /* Copie du résultat */
+  const toastEl = document.getElementById('toast');
+  let toastTimer = null;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1600);
+  }
+
+  screenEl.addEventListener('click', async () => {
+    const value = state.resultShown !== null ? String(state.resultShown) : state.input;
+    if (!value) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      toast('Copié dans le presse-papiers');
+    } catch {
+      toast('Copie impossible');
+    }
+  });
+
+  /* =========================================================
+     5. Historique
+     ========================================================= */
+  const histList = document.getElementById('histList');
+  let history = [];
+
+  try {
+    history = JSON.parse(localStorage.getItem('calc.history') || '[]');
+    if (!Array.isArray(history)) history = [];
+  } catch { history = []; }
+
+  function saveHistory() {
+    try { localStorage.setItem('calc.history', JSON.stringify(history.slice(0, 60))); } catch {}
+  }
+
+  function addHistory(expr, result) {
+    history.unshift({ expr, result });
+    history = history.slice(0, 60);
+    saveHistory();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    histList.innerHTML = '';
+
+    if (!history.length) {
+      const div = document.createElement('div');
+      div.className = 'empty';
+      div.innerHTML = '<strong>🧾</strong>Aucun calcul pour le moment.<br>Vos résultats apparaîtront ici.';
+      histList.appendChild(div);
+      return;
+    }
+
+    history.forEach((item, index) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'hist-item';
+      btn.style.animationDelay = Math.min(index * 18, 180) + 'ms';
+      btn.title = 'Réutiliser ce résultat';
+
+      const ex = document.createElement('span');
+      ex.className = 'hist-expr';
+      ex.textContent = pretty(item.expr) + ' =';
+
+      const res = document.createElement('span');
+      res.className = 'hist-res';
+      res.textContent = num0(item.result);
+
+      btn.append(ex, res);
+      btn.addEventListener('click', () => reuseResult(item.result));
+      histList.appendChild(btn);
+    });
+  }
+
+  function reuseResult(value) {
+    const plain = String(parseFloat(Number(value).toPrecision(12)));
+    state.error = '';
+    state.resultShown = null;
+    if (/e/i.test(plain)) {
+      state.lastAnswer = value;
+      state.input = 'ANS';
+    } else {
+      state.input = plain;
+    }
+    refresh();
+  }
+
+  document.getElementById('clearHist').addEventListener('click', () => {
+    if (!history.length) return;
+    history = [];
+    saveHistory();
+    renderHistory();
+    toast('Historique effacé');
+  });
+
+  /* =========================================================
+     6. Convertisseur d'unités
+     ========================================================= */
+  const CATEGORIES = {
+    longueur: {
+      label: 'Longueur',
+      def: ['m', 'km'],
+      units: {
+        mm: { label: 'Millimètre (mm)', to: (v) => v / 1000, from: (v) => v * 1000 },
+        cm: { label: 'Centimètre (cm)', to: (v) => v / 100, from: (v) => v * 100 },
+        m:  { label: 'Mètre (m)', to: (v) => v, from: (v) => v },
+        km: { label: 'Kilomètre (km)', to: (v) => v * 1000, from: (v) => v / 1000 },
+        in: { label: 'Pouce (in)', to: (v) => v * 0.0254, from: (v) => v / 0.0254 },
+        ft: { label: 'Pied (ft)', to: (v) => v * 0.3048, from: (v) => v / 0.3048 },
+        mi: { label: 'Mile (mi)', to: (v) => v * 1609.344, from: (v) => v / 1609.344 },
+      },
+    },
+    masse: {
+      label: 'Masse',
+      def: ['kg', 'lb'],
+      units: {
+        mg: { label: 'Milligramme (mg)', to: (v) => v / 1e6, from: (v) => v * 1e6 },
+        g:  { label: 'Gramme (g)', to: (v) => v / 1000, from: (v) => v * 1000 },
+        kg: { label: 'Kilogramme (kg)', to: (v) => v, from: (v) => v },
+        t:  { label: 'Tonne (t)', to: (v) => v * 1000, from: (v) => v / 1000 },
+        oz: { label: 'Once (oz)', to: (v) => v * 0.028349523125, from: (v) => v / 0.028349523125 },
+        lb: { label: 'Livre (lb)', to: (v) => v * 0.45359237, from: (v) => v / 0.45359237 },
+      },
+    },
+    temperature: {
+      label: 'Température',
+      def: ['c', 'f'],
+      units: {
+        c: { label: 'Celsius (°C)', to: (v) => v, from: (v) => v },
+        f: { label: 'Fahrenheit (°F)', to: (v) => ((v - 32) * 5) / 9, from: (v) => (v * 9) / 5 + 32 },
+        k: { label: 'Kelvin (K)', to: (v) => v - 273.15, from: (v) => v + 273.15 },
+      },
+    },
+    volume: {
+      label: 'Volume',
+      def: ['l', 'ml'],
+      units: {
+        ml:  { label: 'Millilitre (ml)', to: (v) => v / 1000, from: (v) => v * 1000 },
+        cl:  { label: 'Centilitre (cl)', to: (v) => v / 100, from: (v) => v * 100 },
+        l:   { label: 'Litre (l)', to: (v) => v, from: (v) => v },
+        m3:  { label: 'Mètre cube (m³)', to: (v) => v * 1000, from: (v) => v / 1000 },
+        gal: { label: 'Gallon US (gal)', to: (v) => v * 3.785411784, from: (v) => v / 3.785411784 },
+        tasse: { label: 'Tasse (250 ml)', to: (v) => v * 0.25, from: (v) => v / 0.25 },
+      },
+    },
+    surface: {
+      label: 'Surface',
+      def: ['m2', 'ft2'],
+      units: {
+        cm2: { label: 'Centimètre² (cm²)', to: (v) => v / 10000, from: (v) => v * 10000 },
+        m2:  { label: 'Mètre² (m²)', to: (v) => v, from: (v) => v },
+        km2: { label: 'Kilomètre² (km²)', to: (v) => v * 1e6, from: (v) => v / 1e6 },
+        ha:  { label: 'Hectare (ha)', to: (v) => v * 10000, from: (v) => v / 10000 },
+        ft2: { label: 'Pied² (ft²)', to: (v) => v * 0.09290304, from: (v) => v / 0.09290304 },
+        acre: { label: 'Acre', to: (v) => v * 4046.8564224, from: (v) => v / 4046.8564224 },
+      },
+    },
+    vitesse: {
+      label: 'Vitesse',
+      def: ['kmh', 'ms'],
+      units: {
+        kmh: { label: 'Km/h', to: (v) => v / 3.6, from: (v) => v * 3.6 },
+        ms:  { label: 'Mètre/seconde (m/s)', to: (v) => v, from: (v) => v },
+        mph: { label: 'Miles/h (mph)', to: (v) => v * 0.44704, from: (v) => v / 0.44704 },
+        kn:  { label: 'Nœud (kn)', to: (v) => v * 0.514444, from: (v) => v / 0.514444 },
+      },
+    },
+    temps: {
+      label: 'Temps',
+      def: ['h', 'min'],
+      units: {
+        ms:  { label: 'Milliseconde (ms)', to: (v) => v / 1000, from: (v) => v * 1000 },
+        s:   { label: 'Seconde (s)', to: (v) => v, from: (v) => v },
+        min: { label: 'Minute (min)', to: (v) => v * 60, from: (v) => v / 60 },
+        h:   { label: 'Heure (h)', to: (v) => v * 3600, from: (v) => v / 3600 },
+        j:   { label: 'Jour (j)', to: (v) => v * 86400, from: (v) => v / 86400 },
+        sem: { label: 'Semaine', to: (v) => v * 604800, from: (v) => v / 604800 },
+      },
+    },
+    donnees: {
+      label: 'Données',
+      def: ['go', 'mo'],
+      units: {
+        o:  { label: 'Octet (o)', to: (v) => v, from: (v) => v },
+        ko: { label: 'Kilo-octet (Ko)', to: (v) => v * 1024, from: (v) => v / 1024 },
+        mo: { label: 'Méga-octet (Mo)', to: (v) => v * 1024 ** 2, from: (v) => v / 1024 ** 2 },
+        go: { label: 'Giga-octet (Go)', to: (v) => v * 1024 ** 3, from: (v) => v / 1024 ** 3 },
+        to: { label: 'Téra-octet (To)', to: (v) => v * 1024 ** 4, from: (v) => v / 1024 ** 4 },
+      },
+    },
+  };
+
+  const catEl = document.getElementById('cat');
+  const fromEl = document.getElementById('convFrom');
+  const toEl = document.getElementById('convTo');
+  const inEl = document.getElementById('convIn');
+  const outEl = document.getElementById('convOut');
+
+  function opt(value, text) {
+    const o = document.createElement('option');
+    o.value = value;
+    o.textContent = text;
+    return o;
+  }
+
+  Object.keys(CATEGORIES).forEach((key) => catEl.appendChild(opt(key, CATEGORIES[key].label)));
+
+  function fillUnits(catKey, fromUnit, toUnit) {
+    const cat = CATEGORIES[catKey];
+    fromEl.innerHTML = '';
+    toEl.innerHTML = '';
+    Object.entries(cat.units).forEach(([k, u]) => {
+      fromEl.appendChild(opt(k, u.label));
+      toEl.appendChild(opt(k, u.label));
+    });
+    fromEl.value = fromUnit || cat.def[0];
+    toEl.value = toUnit || cat.def[1];
+  }
+
+  function convert() {
+    const cat = CATEGORIES[catEl.value];
+    const from = cat.units[fromEl.value];
+    const to = cat.units[toEl.value];
+    const raw = inEl.value.replace(/\s/g, '').replace(',', '.');
+    const value = parseFloat(raw);
+
+    if (!isFinite(value)) {
+      outEl.value = '';
+      return;
+    }
+
+    const result = to.from(from.to(value));
+    outEl.value = num0(result, 10);
+  }
+
+  catEl.addEventListener('change', () => {
+    fillUnits(catEl.value);
+    convert();
+  });
+  fromEl.addEventListener('change', convert);
+  toEl.addEventListener('change', convert);
+  inEl.addEventListener('input', convert);
+
+  document.getElementById('swap').addEventListener('click', () => {
+    const a = fromEl.value;
+    fromEl.value = toEl.value;
+    toEl.value = a;
+    convert();
+  });
+
+  /* =========================================================
+     7. Onglets
+     ========================================================= */
+  document.querySelectorAll('.tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach((t) => {
+        const active = t === tab;
+        t.classList.toggle('active', active);
+        t.setAttribute('aria-selected', String(active));
+        document.getElementById('view-' + t.dataset.view).classList.toggle('active', active);
+      });
+    });
+  });
+
+  /* =========================================================
+     8. Démarrage
+     ========================================================= */
+  (function init() {
+    try {
+      const savedAngle = localStorage.getItem('calc.angle');
+      if (savedAngle === 'rad' || savedAngle === 'deg') {
+        state.angle = savedAngle;
+        document.querySelectorAll('.seg-btn').forEach((b) => {
+          b.classList.toggle('active', b.dataset.angle === savedAngle);
+        });
+        FUNCS = makeFuncs();
+      }
+    } catch {}
+
+    fillUnits('longueur');
+    convert();
+    renderHistory();
+    refresh();
+  })();
+})();
+</script>
+</body>
+</html>
